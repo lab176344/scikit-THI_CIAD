@@ -25,42 +25,19 @@ Installation
 Dependencies
 ~~~~~~~~~~~~
 
-scikit-THI
+scikit-THI requires ::
+   - conda (4.8.3)
+   - python (3.8)
+   - numpy (1.18.4)
+   - scipy (1.4.1)
+   - joblib ( 0.15.1)
+   - cython (0.29.17)
 
-The installation procedure is as follows :: 
-
-
-
-
-
-scikit-learn requires:
-
-- Python (>= 3.5)
-- NumPy (>= 1.11.0)
-- SciPy (>= 0.17.0)
-- joblib (>= 0.11)
-
-**Scikit-learn 0.20 was the last version to support Python 2.7 and Python 3.4.**
-scikit-learn 0.21 and later require Python 3.5 or newer.
-
-Scikit-learn plotting capabilities (i.e., functions start with ``plot_``
-and classes end with "Display") require Matplotlib (>= 1.5.1). For running the
-examples Matplotlib >= 1.5.1 is required. A few examples require
-scikit-image >= 0.12.3, a few examples require pandas >= 0.18.0.
 
 User installation
 ~~~~~~~~~~~~~~~~~
 
-If you already have a working installation of numpy and scipy,
-the easiest way to install scikit-learn is using ``pip``   ::
-
-    pip install -U scikit-learn
-
-or ``conda``::
-
-    conda install scikit-learn
-
-The documentation includes more detailed `installation instructions <http://scikit-learn.org/stable/install.html>`_.
+The installation procedure is as follows :: 
 
 
 Testing
