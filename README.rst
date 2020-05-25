@@ -4,7 +4,7 @@ scikit-THI
 About scikit-THI
 ~~~~~~~~~~~~
 
-scikit-THI is a modified version of the scikit-learn [1] repository. The modifications are mainly in the Random Forest implementation of the scikit-learn [1] repository. The changes are the following
+scikit-THI is a modified version of the scikit-learn [1] repository. The modifications are mainly in the Random Forest implementation of the scikit-learn repository. The changes are the following
 
    - Unsupervised Random Forest implementaion from [2] is added
    - Node proximity from [3] is added
