@@ -12,7 +12,7 @@ except  ImportError as err:
     print('There is problem in either tree.pyx or _classes.py')
     
 try: 
-    from from sklearn.ensemble import _indexing_tree
+    from sklearn.ensemble import _indexing_tree
     test_pass = True
 except ImportError as err:
     print('There is problem in with the indexing')
