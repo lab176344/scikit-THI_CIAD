@@ -1,8 +1,8 @@
 .. -*- mode: rst -*-
-scikit-THI
+Scikit-THI
 ============
 
-Schikit-THI is a modified version of the scikit-learn [1] repository. The modifications are mainly in the Random Forest implementation of the scikit-learn [1] repository. 
+Scikit-THI is a modified version of the scikit-learn [1] repository. The modifications are mainly in the Random Forest implementation of the scikit-learn [1] repository. 
 
 About Scikit
 [1] scikit-learn is a Python module for machine learning built on top of
