@@ -48,7 +48,7 @@ The installation procedure is as follows ::
    - Open Anaconda prompt
       - conda create -n venv (Recommended)
       - conda activate venv
-      - git clone https://github.com/scikit-learn/scikit-THI.git
+      - git clone https://github.com/lab176344/scikit-THI.git
       - cd scikit-THI
       - pip install --verbose --editable .
       - python test.py
