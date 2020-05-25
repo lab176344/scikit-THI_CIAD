@@ -42,9 +42,23 @@ User installation
 The installation procedure is as follows ::
    
    - Install Anaconda from https://repo.anaconda.com/archive/Anaconda3-2020.02-Windows-x86_64.exe
-   - Install MSVC community 2019, in the VS installer please select the following ::
+   - Install MSVC community 2019, in the VS installer please select the following 
       - Desktop development with C++
       - Development of universal windows plattform
+   - Open Anaconda prompt
+      - conda create -n venv (Recommended)
+      - conda activate venv
+      - git clone https://github.com/scikit-learn/scikit-learn.git
+      - git checkout 0.22.X
+      - git clone 
+      - cd 
+      - python 
+      - cd .. && cd scikit-learn
+      - pip install --verbose --editable .
+      - cd 
+      - python test.py
+
+If the test pass message is received, the installation is proper and the Random Forest implementation can be used.
 
 
 Testing
