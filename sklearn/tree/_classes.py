@@ -1741,7 +1741,6 @@ class ExtraTreeRegressor(DecisionTreeRegressor):
             ccp_alpha=ccp_alpha)
 
 class UnsupervisedTree(DecisionTreeClassifier):
-    @_deprecate_positional_args
     def __init__(self, *,
                  criterion="unsupervised_gini",
                  splitter="unsupervised",

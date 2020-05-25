@@ -2418,7 +2418,6 @@ class RandomTreesEmbedding(BaseForest):
         return self.one_hot_encoder_.transform(self.apply(X))
 
 class UnsupervisedRandomForest(BaseForest):
-    @_deprecate_positional_args
     def __init__(self,
                  max_features = "sqrt",
                  n_estimators=100, *,
