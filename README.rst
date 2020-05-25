@@ -48,14 +48,9 @@ The installation procedure is as follows ::
    - Open Anaconda prompt
       - conda create -n venv (Recommended)
       - conda activate venv
-      - git clone https://github.com/scikit-learn/scikit-learn.git
-      - git checkout 0.22.X
-      - git clone 
-      - cd 
-      - python 
-      - cd .. && cd scikit-learn
+      - git clone https://github.com/scikit-learn/scikit-THI.git
+      - cd scikit-THI
       - pip install --verbose --editable .
-      - cd 
       - python test.py
 
 If the ``test pass`` message is received, the installation is proper and the Random Forest implementation can be used.
