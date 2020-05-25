@@ -25,19 +25,26 @@ Installation
 Dependencies
 ~~~~~~~~~~~~
 
-scikit-THI requires 
+scikit-THI requires ::
+
    - conda (4.8.3)
    - python (3.8)
    - numpy (1.18.4)
    - scipy (1.4.1)
    - joblib ( 0.15.1)
    - cython (0.29.17)
-
+   - MSVC v142 -VS2019 C++-64/86-Buildtools (14.26)
+   - Windows SDK 10.0.18362.0)
 
 User installation
 ~~~~~~~~~~~~~~~~~
 
-The installation procedure is as follows :: 
+The installation procedure is as follows ::
+   
+   - Install Anaconda from https://repo.anaconda.com/archive/Anaconda3-2020.02-Windows-x86_64.exe
+   - Install MSVC community 2019, in the VS installer please select the following ::
+      - Desktop development with C++
+      - Development of universal windows plattform
 
 
 Testing
