@@ -1,10 +1,10 @@
 .. -*- mode: rst -*-
-Scikit-THI
+scikit-THI
 ============
 
-``Scikit-THI`` is a modified version of the scikit-learn [1] repository. The modifications are mainly in the Random Forest implementation of the scikit-learn [1] repository. 
+``scikit-THI`` is a modified version of the scikit-learn [1] repository. The modifications are mainly in the Random Forest implementation of the scikit-learn [1] repository. 
 
-About Scikit
+About scikit-learn
 ---------------
 [1] scikit-learn is a Python module for machine learning built on top of
 SciPy and is distributed under the 3-Clause BSD license.
@@ -61,19 +61,10 @@ The installation procedure is as follows ::
 If the ``test pass`` message is received, the installation is proper and the Random Forest implementation can be used.
 
 
-Testing
+Using scikit-THI
 ~~~~~~~
 
-After installation, you can launch the test suite from outside the
-source directory (you will need to have ``pytest`` >= 3.3.0 installed)::
 
-    pytest sklearn
-
-See the web page http://scikit-learn.org/dev/developers/advanced_installation.html#testing
-for more information.
-
-    Random number generation can be controlled during testing by setting
-    the ``SKLEARN_SEED`` environment variable.
 
 
 Citation
