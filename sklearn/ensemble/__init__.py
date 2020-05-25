@@ -21,6 +21,8 @@ from ._voting import VotingRegressor
 from ._stacking import StackingClassifier
 from ._stacking import StackingRegressor
 
+from ._forest import UnsupervisedRandomForest
+
 from . import partial_dependence
 
 __all__ = ["BaseEnsemble",

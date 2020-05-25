@@ -58,6 +58,7 @@ cdef class Criterion:
     cdef int reset(self) nogil except -1
     cdef int reverse_reset(self) nogil except -1
     cdef int update(self, SIZE_t new_pos) nogil except -1
+    cdef int update_unsupervised(self, SIZE_t new_pos, DTYPE_t interval_min,  DTYPE_t interval_max,  DTYPE_t interval_size,  DTYPE_t mu,  DTYPE_t mu1,  DTYPE_t mu2, DTYPE_t std_dev,  DTYPE_t noise_density,  DTYPE_t threshold_calc, int noise_type) nogil except -1
     cdef double node_impurity(self) nogil
     cdef void children_impurity(self, double* impurity_left,
                                 double* impurity_right) nogil
@@ -75,3 +76,9 @@ cdef class RegressionCriterion(Criterion):
     """Abstract regression criterion."""
 
     cdef double sq_sum_total
+
+cdef class UnsupervisedCriterion(Criterion):
+    """Abstract criterion for classification."""
+
+    cdef SIZE_t* n_classes
+    cdef SIZE_t sum_stride

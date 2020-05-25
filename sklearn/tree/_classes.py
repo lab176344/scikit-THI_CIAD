@@ -49,7 +49,9 @@ from . import _tree, _splitter, _criterion
 __all__ = ["DecisionTreeClassifier",
            "DecisionTreeRegressor",
            "ExtraTreeClassifier",
-           "ExtraTreeRegressor"]
+           "ExtraTreeRegressor",
+           "UnsupervisedTree"]
+
 
 
 # =============================================================================
@@ -59,12 +61,13 @@ __all__ = ["DecisionTreeClassifier",
 DTYPE = _tree.DTYPE
 DOUBLE = _tree.DOUBLE
 
-CRITERIA_CLF = {"gini": _criterion.Gini, "entropy": _criterion.Entropy}
+CRITERIA_CLF = {"gini": _criterion.Gini, "entropy": _criterion.Entropy, "unsupervised_gini": _criterion.UnsupervisedGini}
 CRITERIA_REG = {"mse": _criterion.MSE, "friedman_mse": _criterion.FriedmanMSE,
                 "mae": _criterion.MAE}
 
 DENSE_SPLITTERS = {"best": _splitter.BestSplitter,
-                   "random": _splitter.RandomSplitter}
+                   "random": _splitter.RandomSplitter,
+                   "unsupervised": _splitter.UnsupervisedSplitter}
 
 SPARSE_SPLITTERS = {"best": _splitter.BestSparseSplitter,
                     "random": _splitter.RandomSparseSplitter}
@@ -1736,3 +1739,39 @@ class ExtraTreeRegressor(DecisionTreeRegressor):
             min_impurity_split=min_impurity_split,
             random_state=random_state,
             ccp_alpha=ccp_alpha)
+
+class UnsupervisedTree(DecisionTreeClassifier):
+    @_deprecate_positional_args
+    def __init__(self, *,
+                 criterion="unsupervised_gini",
+                 splitter="unsupervised",
+                 max_depth=None,
+                 min_samples_split=2,
+                 min_samples_leaf=1,
+                 min_weight_fraction_leaf=0.,
+                 max_features="sqrt",
+                 random_state=None,
+                 max_leaf_nodes=None,
+                 min_impurity_decrease=0.,
+                 min_impurity_split=None,
+                 class_weight=None,
+                 ccp_alpha=0.0):
+        super().__init__(
+            criterion=criterion,
+            splitter=splitter,
+            max_depth=max_depth,
+            min_samples_split=min_samples_split,
+            min_samples_leaf=min_samples_leaf,
+            min_weight_fraction_leaf=min_weight_fraction_leaf,
+            max_features=max_features,
+            max_leaf_nodes=max_leaf_nodes,
+            class_weight=class_weight,
+            min_impurity_decrease=min_impurity_decrease,
+            min_impurity_split=min_impurity_split,
+            random_state=random_state,
+            ccp_alpha=ccp_alpha)
+
+    def fit(self, X, y=None, sample_weight=None, check_input=True,X_idx_sorted=None):
+        y = np.random.randint(2,size=X.shape[0])
+        super().fit(X,y,sample_weight,check_input,X_idx_sorted)
+        return self
