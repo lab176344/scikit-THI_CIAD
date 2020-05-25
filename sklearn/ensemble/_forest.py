@@ -62,7 +62,9 @@ from ._base import BaseEnsemble, _partition_estimators
 from ..utils.fixes import _joblib_parallel_args
 from ..utils.multiclass import check_classification_targets
 from ..utils.validation import check_is_fitted, _check_sample_weight
-
+from ._path_proximity_binary import path_proximity_binary
+from ._path_proximity import path_proximity
+from ._node_proximity import node_proximity
 
 __all__ = ["RandomForestClassifier",
            "RandomForestRegressor",
@@ -262,8 +264,166 @@ class BaseForest(MultiOutputMixin, BaseEnsemble, metaclass=ABCMeta):
         n_nodes = [0]
         n_nodes.extend([i.shape[1] for i in indicators])
         n_nodes_ptr = np.array(n_nodes).cumsum()
-
         return sparse_hstack(indicators).tocsr(), n_nodes_ptr
+    # Path Proximity and RFAPS
+
+    def encode(self, X):
+        """Return the encoded data
+
+        Parameters
+        ----------
+        X : ndarray
+            shape = [n_samples, n_features]
+
+        Returns
+        -------
+        X_encode: ndarray
+            shape = [n_samples, n_trees]
+            X_encode[i, j] represent the leaf index for the j'th tree for the i'th sample
+        """
+        X = self._validate_X_predict(X)
+        results = Parallel(n_jobs=self.n_jobs, verbose=self.verbose,
+                           **_joblib_parallel_args(prefer='threads'))(
+                delayed(tree.apply)(X, check_input=False)
+                for tree in self.estimators_)
+        X_encode = np.array(results).T
+        return X_encode
+
+    def encode_rfap(self, X):
+        """Return the encoded data
+
+        Parameters
+        ----------
+        X : ndarray
+            shape = [n_samples, n_features]
+
+        Returns
+        -------
+        X_encode: ndarray
+            shape = [n_samples, n_trees]
+            X_encode[i, j] represent the rfap for the j'th tree for the i'th sample
+        """
+        X = self._validate_X_predict(X)
+        results = Parallel(n_jobs=self.n_jobs, verbose=self.verbose,
+                           **_joblib_parallel_args(prefer='threads'))(
+                delayed(tree.apply_rfap)(X, check_input=False)
+                for tree in self.estimators_)
+        X_encode = np.array(results).T
+        return X_encode
+
+    def decode(self, X_encode, sample_method="minimal", null_value=0.):
+        """Return the decoded data
+
+        Parameters
+        ----------
+        X_encode: ndarray
+            shape = [n_samples, n_trees]
+            X_encode[i] is the encode result for the i'th sample
+        sample_method: str
+            If sample_method == 'minimal':
+                The value of each dimension of the decoded result is determined by the minimal value defined by the corresponding MCR
+            MCR (Maximal-Compatible Rule) is the rule defined by the decison paths of X with certain properties, checkout the paper if you want more details.
+        null_value: float
+            The value used to replace null value of the decoded result
+
+        Returns
+        -------
+        X_decode: ndarray
+            shape = [n_samples, n_feautres]
+            the decoded data
+        """
+        X_decode = []
+        for single_encode in X_encode:
+            spaces = self.get_spaces_by_leafs(single_encode)
+            single_decode = self.sample_X_by_spaces(
+                spaces, sample_method=sample_method, null_value=null_value)
+            X_decode.append(single_decode)
+        X_decode = np.asarray(X_decode)
+        return X_decode
+
+    def get_paths_by_leafs(self, leafs, depth):
+        paths = np.zeros((len(self.estimators_), depth+1))
+        path_length = np.zeros((len(self.estimators_),))
+        for i, bt in enumerate(self.estimators_):
+            a = np.asarray(bt.get_path_by_leaf(leafs[i]), dtype=np.intc)
+            paths[i, :a.size] = a
+            path_length[i] = a.size
+        return paths, path_length
+
+    def sample_X_by_spaces(self, spaces, sample_method="minimal", null_value=0.):
+        """
+        spaces (list): spaces[i] is an x_bounds (x_bounds[k,0]<=x[k]<=x_bounds[k,1])
+        """
+        n_dims = len(spaces[0])
+        X = [[] for k in range(n_dims)]
+        spaces = np.asarray(spaces)
+        if sample_method == 'minimal':
+            for k in range(n_dims):
+                nan_left_mask = np.isnan(spaces[:, k, 0])
+                valid_left_mask = np.logical_not(nan_left_mask)
+                valid_L_index = np.where(valid_left_mask)[0]
+                X[k].extend((spaces[valid_L_index, k, 0]))
+            for i in range(n_dims):
+                if len(X[i]) == 0:
+                    X[i] = null_value
+                else:
+                    X[i] = np.max(X[i])
+            return np.asarray(X)
+        else:
+            raise ValueError()
+
+    def get_spaces_by_leafs(self, leafs):
+        """
+        bottom up getter, a list of sub-spaces
+        """
+        paths = self.get_paths_by_leafs(leafs, 0)
+        spaces = []
+        for ti, bt in enumerate(self.estimators_):
+            space = bt.get_space_by_path(paths[ti], self.n_features_)
+            spaces.append(space)
+        return spaces
+
+    def get_proximity_matrix(self, X=None, typeCalc='Node'):
+        '''
+        Info: Get the proximity matrix
+        Input: Full Dataset and the type of proximity
+        Return: proximity matrix
+        '''
+        nodeData = self.encode(X)
+        sample_size = X.shape[0]
+        prox_Matrix = np.zeros((sample_size, sample_size))
+
+        depth = 0
+        for i in self.estimators_:
+            if(i.tree_.max_depth > depth):
+                depth = i.tree_.max_depth
+
+        if typeCalc == 'PathBinary':
+            Paths, path_length = map(
+                list, zip(*[self.get_paths_by_leafs(i, depth) for i in nodeData]))
+            Paths = np.asarray(Paths, dtype=np.intc)
+            path_length = np.asarray(path_length, dtype=np.intc)
+            prox_Matrix = path_proximity_binary(
+                Paths, path_length, sample_size, len(self.estimators_))
+            prox_Matrix = np.triu(prox_Matrix, 1)+np.transpose(prox_Matrix)
+            np.fill_diagonal(prox_Matrix, 1)
+        elif typeCalc == 'PathNormal':
+            Paths, path_length = map(
+                list, zip(*[self.get_paths_by_leafs(i, depth) for i in nodeData]))
+            Paths = np.asarray(Paths, dtype=np.intc)
+            path_length = np.asarray(path_length, dtype=np.intc)
+            prox_Matrix = path_proximity(
+                Paths, path_length, sample_size, len(self.estimators_))
+            prox_Matrix = np.triu(prox_Matrix, 1)+np.transpose(prox_Matrix)
+            np.fill_diagonal(prox_Matrix, 1)
+        elif typeCalc == 'Node':
+            nodeData = np.asarray(nodeData, dtype=np.intc, order='C')
+            prox_Matrix = node_proximity(
+                nodeData, sample_size, len(self.estimators_))
+        else:
+            raise ValueError('Not supported Proximity')
+
+        return prox_Matrix
 
     def fit(self, X, y, sample_weight=None):
         """
@@ -1098,6 +1258,7 @@ class RandomForestClassifier(ForestClassifier):
     --------
     DecisionTreeClassifier, ExtraTreesClassifier
     """
+
     def __init__(self,
                  n_estimators=100,
                  criterion="gini",
@@ -1384,6 +1545,7 @@ class RandomForestRegressor(ForestRegressor):
     --------
     DecisionTreeRegressor, ExtraTreesRegressor
     """
+
     def __init__(self,
                  n_estimators=100,
                  criterion="mse",
@@ -1687,6 +1849,7 @@ class ExtraTreesClassifier(ForestClassifier):
     RandomForestClassifier : Ensemble Classifier based on trees with optimal
         splits.
     """
+
     def __init__(self,
                  n_estimators=100,
                  criterion="gini",
@@ -1947,6 +2110,7 @@ class ExtraTreesRegressor(ForestRegressor):
     sklearn.tree.ExtraTreeRegressor: Base estimator for this ensemble.
     RandomForestRegressor: Ensemble regressor using trees with optimal splits.
     """
+
     def __init__(self,
                  n_estimators=100,
                  criterion="mse",

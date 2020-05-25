@@ -11,6 +11,25 @@ def configuration(parent_package="", top_path=None):
 
     config.add_subpackage("tests")
 
+    config.add_extension("_path_proximity",
+                        sources=["_path_proximity.pyx"],
+                        include_dirs=[numpy.get_include()])
+    
+    config.add_extension("_node_proximity",
+                        sources=["_node_proximity.pyx"],
+                        include_dirs=[numpy.get_include()])  
+    
+    config.add_extension("_path_proximity_binary",
+                        sources=["_path_proximity_binary.pyx"],
+                        include_dirs=[numpy.get_include()])  
+
+    config.add_extension("_indexing_tree",
+                        sources=["_indexing_tree.pyx"],
+                        include_dirs=[numpy.get_include()])  
+                        
+                         
+
+
     # Histogram-based gradient boosting files
     config.add_extension(
         "_hist_gradient_boosting._gradient_boosting",

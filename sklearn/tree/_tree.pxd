@@ -18,6 +18,7 @@ ctypedef np.npy_float64 DOUBLE_t         # Type of y, sample_weight
 ctypedef np.npy_intp SIZE_t              # Type for indices and counters
 ctypedef np.npy_int32 INT32_t            # Signed 32 bit integer
 ctypedef np.npy_uint32 UINT32_t          # Unsigned 32 bit integer
+ctypedef np.npy_int64 INT64_t            # Signed 64 bit integer   
 
 from ._splitter cimport Splitter
 from ._splitter cimport SplitRecord
@@ -32,6 +33,9 @@ cdef struct Node:
     DOUBLE_t impurity                    # Impurity of the node (i.e., the value of the criterion)
     SIZE_t n_node_samples                # Number of samples at the node
     DOUBLE_t weighted_n_node_samples     # Weighted number of samples at the node
+    SIZE_t parent                        # id of the parent of the node
+    SIZE_t random_factor                 # random factor
+    SIZE_t depth                         # node depth 
 
 
 cdef class Tree:
@@ -50,6 +54,7 @@ cdef class Tree:
     cdef public SIZE_t max_depth         # Max depth of the tree
     cdef public SIZE_t node_count        # Counter for node IDs
     cdef public SIZE_t capacity          # Capacity of tree, in terms of nodes
+    cdef public INT64_t[:,] rfap_store   # Rfap storage
     cdef Node* nodes                     # Array of nodes
     cdef double* value                   # (capacity, n_outputs, max_n_classes) array of values
     cdef SIZE_t value_stride             # = n_outputs * max_n_classes
@@ -58,7 +63,7 @@ cdef class Tree:
     cdef SIZE_t _add_node(self, SIZE_t parent, bint is_left, bint is_leaf,
                           SIZE_t feature, double threshold, double impurity,
                           SIZE_t n_node_samples,
-                          double weighted_n_samples) nogil except -1
+                          double weighted_n_samples, SIZE_t depth) nogil except -1
     cdef int _resize(self, SIZE_t capacity) nogil except -1
     cdef int _resize_c(self, SIZE_t capacity=*) nogil except -1
 
@@ -70,6 +75,8 @@ cdef class Tree:
     cpdef np.ndarray apply(self, object X)
     cdef np.ndarray _apply_dense(self, object X)
     cdef np.ndarray _apply_sparse_csr(self, object X)
+    cpdef np.ndarray apply_rfap(self, object X)
+
 
     cpdef object decision_path(self, object X)
     cdef object _decision_path_dense(self, object X)

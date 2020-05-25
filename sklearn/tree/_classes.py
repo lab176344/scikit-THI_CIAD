@@ -472,6 +472,35 @@ class BaseDecisionTree(MultiOutputMixin, BaseEstimator, metaclass=ABCMeta):
         X = self._validate_X_predict(X, check_input)
         return self.tree_.apply(X)
 
+    def apply_rfap(self,X,check_input=True):
+        """Return the rfap of the leaf that each sample is predicted as.
+
+        .. versionadded:: 0.1
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape (n_samples, n_features)
+            The input samples. Internally, it will be converted to
+            ``dtype=np.float32`` and if a sparse matrix is provided
+            to a sparse ``csr_matrix``.
+
+        check_input : bool, default=True
+            Allow to bypass several input checking.
+            Don't use this parameter unless you know what you do.
+
+        Returns
+        -------
+        rfaps : array-like of shape (n_samples,)
+            For each datapoint x in X, return the rfap of the leaf x
+            ends up in. Leaves are numbered within
+            ``[0; self.tree_.node_count)``, possibly with gaps in the
+            numbering.
+        """
+        check_is_fitted(self)
+        X = self._validate_X_predict(X, check_input)
+        return self.tree_.apply_rfap(X)
+
+
     def decision_path(self, X, check_input=True):
         """Return the decision path in the tree.
 
@@ -576,11 +605,40 @@ class BaseDecisionTree(MultiOutputMixin, BaseEstimator, metaclass=ABCMeta):
         check_is_fitted(self)
 
         return self.tree_.compute_feature_importances()
+        #
+    #  Code based on AutoEnconder by Forest Paper
 
+    def get_path_by_leaf(self, leaf_id):
+        parent = self.tree_.parent
+        path = []
+        current_id = leaf_id
+        while current_id > 0:
+            path.insert(0, current_id)
+            current_id = parent[current_id]
+        path.insert(0, current_id)
+        return path
+
+        def get_space_by_path(self, path, n_dims):
+            space = np.full((n_dims, 2), np.nan, dtype=np.float32)
+            for i, nid in enumerate(path[:-1]):
+                parent = path[i]
+                son = path[i + 1]
+                tree_children_left = self.tree_.children_left
+                tree_feature = self.tree_.feature
+                tree_threshold = self.tree_.threshold
+                is_left = tree_children_left[parent] == son
+                k = tree_feature[parent]
+                threshold = tree_threshold[parent]
+                if is_left:
+                    space[k][1] = threshold
+                else:
+                    space[k][0] = threshold
+            return space
 
 # =============================================================================
 # Public estimators
 # =============================================================================
+
 
 class DecisionTreeClassifier(ClassifierMixin, BaseDecisionTree):
     """A decision tree classifier.
@@ -801,6 +859,7 @@ class DecisionTreeClassifier(ClassifierMixin, BaseDecisionTree):
     array([ 1.     ,  0.93...,  0.86...,  0.93...,  0.93...,
             0.93...,  0.93...,  1.     ,  0.93...,  1.      ])
     """
+
     def __init__(self,
                  criterion="gini",
                  splitter="best",
@@ -1152,6 +1211,7 @@ class DecisionTreeRegressor(RegressorMixin, BaseDecisionTree):
     array([ 0.61..., 0.57..., -0.34..., 0.41..., 0.75...,
             0.07..., 0.29..., 0.33..., -1.42..., -1.77...])
     """
+
     def __init__(self,
                  criterion="mse",
                  splitter="best",
@@ -1437,6 +1497,7 @@ class ExtraTreeClassifier(DecisionTreeClassifier):
     .. [1] P. Geurts, D. Ernst., and L. Wehenkel, "Extremely randomized trees",
            Machine Learning, 63(1), 3-42, 2006.
     """
+
     def __init__(self,
                  criterion="gini",
                  splitter="random",
@@ -1648,6 +1709,7 @@ class ExtraTreeRegressor(DecisionTreeRegressor):
     >>> reg.score(X_test, y_test)
     0.7823...
     """
+
     def __init__(self,
                  criterion="mse",
                  splitter="random",

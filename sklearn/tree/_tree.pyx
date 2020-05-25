@@ -69,9 +69,9 @@ cdef SIZE_t INITIAL_STACK_SIZE = 10
 
 # Repeat struct definition for numpy
 NODE_DTYPE = np.dtype({
-    'names': ['left_child', 'right_child', 'feature', 'threshold', 'impurity',
+    'names': ['left_child', 'right_child', 'feature', 'threshold', 'impurity','parent','random_factor','depth',
               'n_node_samples', 'weighted_n_node_samples'],
-    'formats': [np.intp, np.intp, np.intp, np.float64, np.float64, np.intp,
+    'formats': [np.intp, np.intp, np.intp, np.float64, np.float64, np.intp, np.intp, np.intp, np.intp, 
                 np.float64],
     'offsets': [
         <Py_ssize_t> &(<Node*> NULL).left_child,
@@ -79,6 +79,9 @@ NODE_DTYPE = np.dtype({
         <Py_ssize_t> &(<Node*> NULL).feature,
         <Py_ssize_t> &(<Node*> NULL).threshold,
         <Py_ssize_t> &(<Node*> NULL).impurity,
+		<Py_ssize_t> &(<Node*> NULL).parent,
+        <Py_ssize_t> &(<Node*> NULL).random_factor,
+        <Py_ssize_t> &(<Node*> NULL).depth,
         <Py_ssize_t> &(<Node*> NULL).n_node_samples,
         <Py_ssize_t> &(<Node*> NULL).weighted_n_node_samples
     ]
@@ -187,7 +190,7 @@ cdef class DepthFirstTreeBuilder(TreeBuilder):
         cdef double weighted_n_node_samples
         cdef SplitRecord split
         cdef SIZE_t node_id
-
+        cdef double threshold					 
         cdef double impurity = INFINITY
         cdef SIZE_t n_constant_features
         cdef bint is_leaf
@@ -243,7 +246,7 @@ cdef class DepthFirstTreeBuilder(TreeBuilder):
 
                 node_id = tree._add_node(parent, is_left, is_leaf, split.feature,
                                          split.threshold, impurity, n_node_samples,
-                                         weighted_n_node_samples)
+                                         weighted_n_node_samples,depth)
 
                 if node_id == SIZE_MAX:
                     rc = -1
@@ -468,7 +471,7 @@ cdef class BestFirstTreeBuilder(TreeBuilder):
                                  else _TREE_UNDEFINED,
                                  is_left, is_leaf,
                                  split.feature, split.threshold, impurity, n_node_samples,
-                                 weighted_n_node_samples)
+                                 weighted_n_node_samples,depth)
         if node_id == SIZE_MAX:
             return -1
 
@@ -591,6 +594,18 @@ cdef class Tree:
     property impurity:
         def __get__(self):
             return self._get_node_ndarray()['impurity'][:self.node_count]
+
+    property parent:
+        def __get__(self):
+            return self._get_node_ndarray()['parent'][:self.node_count]
+
+    property random_factor:
+        def __get__(self):
+            return self._get_node_ndarray()['random_factor'][:self.node_count]	
+    
+    property depth:
+        def __get__(self):
+            return self._get_node_ndarray()['depth'][:self.node_count]
 
     property n_node_samples:
         def __get__(self):
@@ -726,7 +741,7 @@ cdef class Tree:
     cdef SIZE_t _add_node(self, SIZE_t parent, bint is_left, bint is_leaf,
                           SIZE_t feature, double threshold, double impurity,
                           SIZE_t n_node_samples,
-                          double weighted_n_node_samples) nogil except -1:
+                          double weighted_n_node_samples,SIZE_t depth) nogil except -1:
         """Add a node to the tree.
 
         The new node registers itself as the child of its parent.
@@ -747,8 +762,15 @@ cdef class Tree:
         if parent != _TREE_UNDEFINED:
             if is_left:
                 self.nodes[parent].left_child = node_id
+                rand_factor = 1
             else:
                 self.nodes[parent].right_child = node_id
+                rand_factor = 2
+            node.parent = parent
+            node.depth = depth
+            node.random_factor = rand_factor
+        else:
+            node.parent = 0			   
 
         if is_leaf:
             node.left_child = _TREE_LEAF
@@ -893,6 +915,45 @@ cdef class Tree:
 
         return out
 
+    cpdef np.ndarray apply_rfap(self, object X):
+        # Check input
+        if not isinstance(X, np.ndarray):
+            raise ValueError("X should be in np.ndarray format, got %s"
+                             % type(X))
+
+        if X.dtype != DTYPE:
+            raise ValueError("X.dtype should be np.float32, got %s" % X.dtype)
+
+        # Extract input
+        cdef DTYPE_t[:, :] X_ndarray = X
+        cdef SIZE_t n_samples = X.shape[0]
+
+        # Initialize output
+        cdef np.ndarray[SIZE_t] out = np.zeros((n_samples,), dtype=np.intp)
+        cdef np.ndarray[INT64_t] out_rfap = np.zeros((n_samples,), dtype=np.int64)
+        cdef SIZE_t* out_ptr = <SIZE_t*> out.data
+
+
+
+        # Initialize auxiliary data-structure
+        cdef Node* node = NULL
+        cdef SIZE_t i = 0
+
+        with nogil:
+            for i in range(n_samples):
+                node = self.nodes
+                # While node not a leaf
+                while node.left_child != _TREE_LEAF:
+                    # ... and node.right_child != _TREE_LEAF:
+                    if X_ndarray[i, node.feature] <= node.threshold:
+                        node = &self.nodes[node.left_child]
+                    else:
+                        node = &self.nodes[node.right_child]
+                        
+                out_rfap[i] =  self.rfap_store[node - self.nodes]
+                out_ptr[i] = <SIZE_t>(node - self.nodes)  # node offset
+        return out_rfap
+        
     cpdef object decision_path(self, object X):
         """Finds the decision path (=node) for each sample in X."""
         if issparse(X):
@@ -1616,7 +1677,7 @@ cdef _build_pruned_tree(
             new_node_id = tree._add_node(
                 parent, is_left, is_leaf, node.feature, node.threshold,
                 node.impurity, node.n_node_samples,
-                node.weighted_n_node_samples)
+                node.weighted_n_node_samples,0)
 
             if new_node_id == SIZE_MAX:
                 rc = -1
