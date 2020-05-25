@@ -28,7 +28,7 @@ Website: http://scikit-learn.org
 
 
 Installation
-------------
+============
 
 Dependencies
 ~~~~~~~~~~~~
@@ -65,21 +65,28 @@ If the ``test pass`` message is received, the installation is proper and the Ran
 
 
 Using scikit-THI
-~~~~~~~
+============
+Using the proximity calculation
+~~~~~~~~~~~~~~~~~
 
+Using the random indexing
+~~~~~~~~~~~~~~~~~
+
+Using the Unsupervised Forest
+~~~~~~~~~~~~~~~~~
 
 
 
 Citation
-~~~~~~~~
+============
 
 Contributors
-~~~~~~~~
+============
 
 Lakshman Balasubramanian (lakshman.balasubramanian@thi.de), Jonas Wurst (jonas.wurst@thi.de)
 
 Reference
-~~~~~~~~
+============
 [1] Scikit-learn: Machine Learning in Python, Pedregosa et al., JMLR 12, pp. 2825-2830, 2011
 
 [2] F. Kruber, J. Wurst, E. Sánchez Morales, S. Chakraborty and M. Botsch, "Unsupervised and Supervised Learning with the Random Forest Algorithm for Traffic Scenario Clustering and Classification", 30th IEEE Intelligent Vehicles Symposium , 2019 
