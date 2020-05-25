@@ -50,14 +50,14 @@ def path_proximity(int[:,:,::1] paths, int[:,::1] path_lengths, Py_ssize_t n_sam
     sub =  np.zeros((n_samples,),np.double)
     cdef double[::1] sub_view = sub
     cdef Py_ssize_t i
-    cdef int j
+    cdef uint8 j
     cdef Py_ssize_t input_idx1
     cdef Py_ssize_t input_idx2
     cdef int path_l
     for input_idx1 in prange(prox_view.shape[0]-1,nogil=True):
         for input_idx2 in range(input_idx1+1,prox_view.shape[1]):
             for i in range(n_trees):
-                j=0
+                j=1
                 path_l = min(path_lengths[input_idx1,i],path_lengths[input_idx2,i])
                 while j <  path_l:
                     if paths[input_idx1,i,j] == paths[input_idx2,i,j]:
