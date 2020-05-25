@@ -25,7 +25,7 @@ Installation
 Dependencies
 ~~~~~~~~~~~~
 
-scikit-THI requires ::
+scikit-THI requires 
    - conda (4.8.3)
    - python (3.8)
    - numpy (1.18.4)
