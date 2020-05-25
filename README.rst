@@ -2,7 +2,7 @@
 Scikit-THI
 ============
 
-Scikit-THI is a modified version of the scikit-learn [1] repository. The modifications are mainly in the Random Forest implementation of the scikit-learn [1] repository. 
+``Scikit-THI`` is a modified version of the scikit-learn [1] repository. The modifications are mainly in the Random Forest implementation of the scikit-learn [1] repository. 
 
 About Scikit
 ---------------
@@ -58,7 +58,7 @@ The installation procedure is as follows ::
       - cd 
       - python test.py
 
-If the test pass message is received, the installation is proper and the Random Forest implementation can be used.
+If the ``test pass`` message is received, the installation is proper and the Random Forest implementation can be used.
 
 
 Testing
