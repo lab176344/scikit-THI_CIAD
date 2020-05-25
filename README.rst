@@ -1,16 +1,20 @@
 .. -*- mode: rst -*-
 scikit-THI
 ============
+About scikit-THI
+~~~~~~~~~~~~
 
-``scikit-THI`` is a modified version of the scikit-learn [1] repository. The modifications are mainly in the Random Forest implementation of the scikit-learn [1] repository. The changes are the following ::
+scikit-THI is a modified version of the scikit-learn [1] repository. The modifications are mainly in the Random Forest implementation of the scikit-learn [1] repository. The changes are the following
+
    - Unsupervised Random Forest implementaion from [2] is added
    - Node proximity from [3] is added
    - Path proximity from [2] is added
    - Random Forest Indexing is added
 
 About scikit-learn
----------------
-[1] scikit-learn is a Python module for machine learning built on top of
+~~~~~~~~~~~~
+
+scikit-learn is a Python module for machine learning built on top of
 SciPy and is distributed under the 3-Clause BSD license.
 
 The project was started in 2007 by David Cournapeau as a Google Summer
@@ -68,4 +72,20 @@ Using scikit-THI
 
 Citation
 ~~~~~~~~
+
+Contributors
+~~~~~~~~
+
+Lakshman Balasubramanian (lakshman.balasubramanian@thi.de), Jonas Wurst (jonas.wurst@thi.de)
+
+Reference
+~~~~~~~~
+[1] Scikit-learn: Machine Learning in Python, Pedregosa et al., JMLR 12, pp. 2825-2830, 2011
+
+[2] F. Kruber, J. Wurst, E. Sánchez Morales, S. Chakraborty and M. Botsch, "Unsupervised and Supervised Learning with the Random Forest Algorithm for Traffic Scenario Clustering and Classification", 30th IEEE Intelligent Vehicles Symposium , 2019 
+
+[3] Breiman, L. Random Forests. Machine Learning 45, 5–32 (2001). https://doi.org/10.1023/A:1010933404324
+
+
+
 
