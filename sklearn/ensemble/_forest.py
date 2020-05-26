@@ -2439,7 +2439,7 @@ class UnsupervisedRandomForest(BaseForest):
                               "max_features",
                               "min_impurity_decrease", "min_impurity_split",
                               "random_state"),
-            bootstrap=False,
+            bootstrap=True,
             oob_score=False,
             n_jobs=n_jobs,
             random_state=random_state,

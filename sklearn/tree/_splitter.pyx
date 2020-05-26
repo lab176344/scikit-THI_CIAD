@@ -1563,12 +1563,85 @@ cdef class RandomSparseSplitter(BaseSparseSplitter):
 
 cdef class UnsupervisedSplitter(BaseDenseSplitter):
     """Splitter for finding the best split."""
+    ''''
     def __reduce__(self):
         return (BestSplitter, (self.criterion,
                                self.max_features,
                                self.min_samples_leaf,
                                self.min_weight_leaf,
                                self.random_state), self.__getstate__())
+    '''
+    cdef int init(self,
+                   object X,
+                   const DOUBLE_t[:, ::1] y,
+                   DOUBLE_t* sample_weight,
+                   np.ndarray X_idx_sorted=None) except -1:
+        """Initialize the splitter.
+
+        Take in the input data X, the target Y, and optional sample weights.
+
+        Returns -1 in case of failure to allocate memory (and raise MemoryError)
+        or 0 otherwise.
+
+        Parameters
+        ----------
+        X : object
+            This contains the inputs. Usually it is a 2d numpy array.
+
+        y : ndarray, dtype=DOUBLE_t
+            This is the vector of targets, or true labels, for the samples
+
+        sample_weight : DOUBLE_t*
+            The weights of the samples, where higher weighted samples are fit
+            closer than lower weight samples. If not provided, all samples
+            are assumed to have uniform weight.
+
+        X_idx_sorted : ndarray, default=None
+            The indexes of the sorted training input samples
+        """
+
+        self.rand_r_state = self.random_state.randint(0, RAND_R_MAX)
+        cdef SIZE_t n_samples = X.shape[0]
+
+        # Create a new array which will be used to store nonzero
+        # samples from the feature of interest
+        cdef SIZE_t* samples = safe_realloc(&self.samples, n_samples)
+
+        cdef SIZE_t i, j
+        cdef double weighted_n_samples = 0.0
+        j = 0
+
+        for i in range(n_samples):
+            # Only work with positively weighted samples
+            if sample_weight == NULL or sample_weight[i] != 0.0:
+                samples[j] = i
+                j += 1
+
+            if sample_weight != NULL:
+                weighted_n_samples += 2*sample_weight[i]
+            else:
+                weighted_n_samples += 2.0
+
+        # Number of samples is number of positively weighted samples
+        self.n_samples = j
+        self.weighted_n_samples = weighted_n_samples
+
+        cdef SIZE_t n_features = X.shape[1]
+        cdef SIZE_t* features = safe_realloc(&self.features, n_features)
+
+        for i in range(n_features):
+            features[i] = i
+
+        self.n_features = n_features
+
+        safe_realloc(&self.feature_values, n_samples)
+        safe_realloc(&self.constant_features, n_features)
+
+        self.y = y
+        self.X = X
+
+        self.sample_weight = sample_weight
+        return 0
 
     cdef int node_split(self, double impurity, SplitRecord* split,
                         SIZE_t* n_constant_features) nogil except -1:
@@ -1712,7 +1785,7 @@ cdef class UnsupervisedSplitter(BaseDenseSplitter):
                     interval_min = Xf[start]
                     interval_max = Xf[end-1]
                     interval_size = interval_max - interval_min
-                    noise_density = (end-start)/interval_size
+                    noise_density = (self.criterion.weighted_n_node_samples/2)/interval_size
                     std_dev = interval_size/6.0
                     mu = (interval_max+interval_min)/2.0
                     mu1 = mu - interval_size/2.0

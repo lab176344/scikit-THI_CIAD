@@ -61,7 +61,7 @@ def path_proximity_binary(int[:,:,::1] paths, int[:,::1] path_lengths, Py_ssize_
     cdef uint8 m
     div_lut=np.arange((path_lengths.shape[1]+1)*2,dtype=np.int)//2
     cdef int[::1] div_lut_view=div_lut 
-    for input_idx1 in prange(prox_view.shape[0]-1,nogil=True):
+    for input_idx1 in range(prox_view.shape[0]-1):#prange(prox_view.shape[0]-1,nogil=True):
         for input_idx2 in range(input_idx1+1,prox_view.shape[1]):
             for i in range(n_trees):
                 intersectAB = 1
@@ -76,6 +76,7 @@ def path_proximity_binary(int[:,:,::1] paths, int[:,::1] path_lengths, Py_ssize_
                     else:
                         R = m - 1
                 intersectAB = m + 1
+                #print(intersectAB)
                 prox_view[input_idx1,input_idx2] += (<double>intersectAB)/(<double>(path_lengths[input_idx1,i]+ path_lengths[input_idx2,i]-intersectAB))
             prox_view[input_idx1,input_idx2] = prox_view[input_idx1,input_idx2]/n_trees    
 
