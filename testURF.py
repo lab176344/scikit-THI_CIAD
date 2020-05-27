@@ -4,18 +4,17 @@ import timeit
 import matplotlib.pyplot as plt
 import pandas as pd
 
-N = 500
-Dim = 20
+N = 2500
+Dim = 10
 
 posMean = 10
 n_trees = 100
+np.random.seed(42)
 X1 = np.random.randn(N,Dim) + posMean
+np.random.seed(42)
 X2 = np.random.randn(N,Dim) - posMean
 X = np.concatenate((X1,X2))
 Y = None
-
-print(X)
-print(X.shape)
 
 start = timeit.default_timer()
 estimator = tree.UnsupervisedTree()
@@ -24,10 +23,9 @@ stop = timeit.default_timer()
 print('Time: ', stop - start)  
 
 print(estimator.tree_.node_count)
-
 from sklearn import ensemble
 start = timeit.default_timer()
-estimator2 = ensemble.UnsupervisedRandomForest(n_estimators=n_trees)
+estimator2 = ensemble.UnsupervisedRandomForest(n_estimators=n_trees,random_state=42)
 estimator2.fit(X, Y)
 stop = timeit.default_timer()
 print('Time: ', stop - start) 
@@ -38,8 +36,8 @@ stop = timeit.default_timer()
 print('Time: ', stop - start) 
 print(matrix.mean())
 print(matrix)
-plt.imshow(matrix)
-plt.show()
+#plt.imshow(matrix)
+#plt.show()
 
 
 Tree =estimator2.estimators_[0]

@@ -2459,6 +2459,8 @@ class UnsupervisedRandomForest(BaseForest):
 
     def fit(self, X, y=None, sample_weight=None):
         y = np.random.randint(2,size=X.shape[0])
+        if np.all(y == y[0]):
+            y[0] = 1 - y[0]
         
         super().fit(X, y, sample_weight=sample_weight)
         return self
