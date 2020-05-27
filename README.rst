@@ -68,9 +68,27 @@ Using scikit-THI
 ============
 Using the proximity calculation
 ~~~~~~~~~~~~~~~~~
+Example ::
 
+   from sklearn.ensemble import RandomForestClassifier
+   from sklearn.datasets import make_blobs
+   X, Y = make_blobs(n_samples=10000, centers=5, n_features=100, random_state=0)
+   estimator=RandomForestClassifier(min_samples_leaf=1,max_features="sqrt",n_estimators=nTrees_vect[n],oob_score=True)
+   estimator.fit(X, Y)
+   proximity = estimator.get_proximity_matrix(X, typeCalc = 'Node') # typeCalc = 'PathNormal' for path proximity
+   
 Using the random indexing
 ~~~~~~~~~~~~~~~~~
+Example ::
+
+   from sklearn.ensemble import RandomForestClassifier
+   from sklearn.datasets import make_blobs
+   X, Y = make_blobs(n_samples=10000, centers=5, n_features=100, random_state=0)
+   estimator=RandomForestClassifier(min_samples_leaf=1,max_features="sqrt",n_estimators=nTrees_vect[n],oob_score=True)
+   estimator.fit(X, Y)
+   estimator.index()
+   rfapX = estimator.encode_rfap(X)
+
 
 Using the Unsupervised Forest
 ~~~~~~~~~~~~~~~~~
