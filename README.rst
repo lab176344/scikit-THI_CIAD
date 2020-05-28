@@ -92,9 +92,16 @@ Example ::
 
 Using the Unsupervised Forest
 ~~~~~~~~~~~~~~~~~
-
-
-
+Example ::
+import numpy as np
+   from sklearn import ensemble
+   N = 2500, D = 10, posMean = 10, n_trees = 100
+   X1 = np.random.randn(N//2,D) + posMean, X2 = np.random.randn(N//2,D) - posMean
+   X = np.concatenate((X1,X2)), Y = None
+   estimator = ensemble.UnsupervisedRandomForest(n_estimators=n_trees,random_state=42)
+   estimator.fit(X, Y)
+   matrix = estimator.get_proximity_matrix(X, typeCalc='PathNormal')
+   
 Citation
 ============
 
