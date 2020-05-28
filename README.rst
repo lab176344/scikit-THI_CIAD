@@ -93,7 +93,8 @@ Example ::
 Using the Unsupervised Forest
 ~~~~~~~~~~~~~~~~~
 Example ::
-import numpy as np
+
+   import numpy as np
    from sklearn import ensemble
    N = 2500, D = 10, posMean = 10, n_trees = 100
    X1 = np.random.randn(N//2,D) + posMean, X2 = np.random.randn(N//2,D) - posMean
@@ -104,6 +105,14 @@ import numpy as np
    
 Citation
 ============
+
+@misc{lakwurst.2020,
+ author = {{L. Balasubramanian} and {J. Wurst},
+ date = {2020},
+ title = {{scikit - THI}},
+ journal={GitHub repository},
+ url = {\url{https://github.com/lab176344/scikit-THI}}
+}
 
 Contributors
 ============
