@@ -81,9 +81,6 @@ def node_proximity_knn(int[:,::1] nodes, Py_ssize_t n_samples, Py_ssize_t n_tree
             for i in range(n_trees):
                 if nodes[input_idx1,i] == nodes[input_idx2,i]:
                     prox_zws_view[input_idx1] = prox_zws_view[input_idx1] + 1
-                
-                #if prox_zws_view[input_idx1] + <double>(n_trees -i) < prox_best_intern_view[input_idx1,k_neighbors-1]:
-                #    break
             if prox_zws_view[input_idx1] >= prox_best_intern_view[input_idx1,k_neighbors-1]:
                 # Needs to be included to the k best values; first find index
                 index = 0
