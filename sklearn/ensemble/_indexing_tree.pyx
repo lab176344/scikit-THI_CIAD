@@ -46,10 +46,10 @@ def convert_number(int[:] n, Py_ssize_t max_depth):
     cdef Py_ssize_t i
     sum_val = 0
     for i in range(max_depth):
-        sum_val = sum_val + (int(n_flip[i]))*(3**i)
+        sum_val = sum_val + ((n_flip[i]))*(3**i)
     return sum_val
 
-def index_tree(int64[::1,] left_idx, int64[::1,] right_idx, int64[::1,] node_depth, Py_ssize_t n_nodes, Py_ssize_t max_depth, int rfap_type):
+def index_tree(int64[::1,] left_idx, int64[::1,] right_idx, int64[::1,] node_depth, Py_ssize_t n_nodes, Py_ssize_t max_depth, int rfap_type=2):
     '''
     Function to index a single 
     rfap_type = 1 for original RFAP
