@@ -66,6 +66,7 @@ from ._path_proximity import path_proximity, path_proximity2
 from ._path_proximity_knn import path_proximity_knn, path_proximity_knn2
 from ._node_proximity import node_proximity, node_proximity2
 from ._node_proximity_knn import node_proximity_knn, node_proximity_knn2
+from sklearn.ensemble import _indexing_tree
 
 __all__ = ["RandomForestClassifier",
            "RandomForestRegressor",
@@ -425,10 +426,10 @@ class BaseForest(MultiOutputMixin, BaseEnsemble, metaclass=ABCMeta):
                 prox_Matrix = node_proximity(
                     nodeData, sample_size, len(self.estimators_))
             elif typeCalc == 'NodeKNN':
-                prox_Matrix = np.zeros((sample_size, sample_size))
                 nodeData = np.asarray(nodeData, dtype=np.intc, order='C')
-                prox_Matrix = node_proximity_knn(
+                prox_values, index_1, index_2 = node_proximity_knn(
                     nodeData, sample_size, len(self.estimators_), k_neighbors)
+                prox_Matrix = [prox_values, index_1, index_2]
             else:
                 raise ValueError('Not supported Proximity')
         else:
@@ -472,18 +473,40 @@ class BaseForest(MultiOutputMixin, BaseEnsemble, metaclass=ABCMeta):
                 prox_values, index_1, index_2 = path_proximity_knn2(
                     Paths1, Paths2, path_length1, path_length2, sample_size1, sample_size2, len(self.estimators_), k_neighbors)
                 prox_Matrix = [prox_values, index_1, index_2]
+
             elif typeCalc == 'Node':
+                nodeData1 = np.asarray(nodeData1, dtype=np.intc, order='C')
+                nodeData2 = np.asarray(nodeData2, dtype=np.intc, order='C')
+                
                 prox_Matrix = node_proximity2(
-                    nodeData1, nodeData2, sample_size, len(self.estimators_))
+                    nodeData1, nodeData2, sample_size1, sample_size2, len(self.estimators_))
+            
             elif typeCalc == 'NodeKNN':
-                prox_Matrix = node_proximity_knn2(
-                    nodeData1, nodeData2, sample_size, len(self.estimators_), k_neighbors)
+                nodeData1 = np.asarray(nodeData1, dtype=np.intc, order='C')
+                nodeData2 = np.asarray(nodeData2, dtype=np.intc, order='C')
+                
+                prox_values, index_1, index_2  = node_proximity_knn2(
+                    nodeData1, nodeData2, sample_size1, sample_size2, len(self.estimators_), k_neighbors)
+                prox_Matrix = [prox_values, index_1, index_2]
             else:
                 raise ValueError('Not supported Proximity')
 
 
         return prox_Matrix
 
+    def index_tree(self):
+        # #RFAP
+        for rfap_no in range(len(self.estimators_)):
+            Tree = self.estimators_[rfap_no]
+            left_idx = np.asarray(Tree.tree_.children_left, order='C')
+            right_idx = np.asarray(Tree.tree_.children_right, order='C')
+            max_path = Tree.tree_.max_depth
+            node_depth = np.asarray(Tree.tree_.depth, order='C')
+            node_count = Tree.tree_.node_count
+            rfap = _indexing_tree.index_tree(left_idx,right_idx,node_depth,node_count,max_path,2)
+            self.estimators_[rfap_no].tree_.rfap_store = rfap
+    
+    
     def fit(self, X, y, sample_weight=None):
         """
         Build a forest of trees from the training set (X, y).

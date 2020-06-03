@@ -47,7 +47,6 @@ def node_proximity_knn(int[:,::1] nodes, Py_ssize_t n_samples, Py_ssize_t n_tree
     if k_neighbors >=  n_samples:
         k_neighbors =  n_samples
 
-
     index_1 =  np.zeros((k_neighbors*n_samples,),np.int32)
     index_2 =  np.zeros((k_neighbors*n_samples,),np.int32)
     prox_values =  np.zeros((k_neighbors*n_samples,),np.double)
@@ -75,7 +74,6 @@ def node_proximity_knn(int[:,::1] nodes, Py_ssize_t n_samples, Py_ssize_t n_tree
     cdef Py_ssize_t index_local
     
     cdef Py_ssize_t i
-    cdef int j = 0
 
     for input_idx1 in prange(n_samples, nogil=True):
         for input_idx2 in range(n_samples):
@@ -119,5 +117,77 @@ def node_proximity_knn(int[:,::1] nodes, Py_ssize_t n_samples, Py_ssize_t n_tree
 
 
 
+def node_proximity_knn2(int[:,::1] node1, int[:,::1] node2, Py_ssize_t n_samples1, Py_ssize_t n_samples2, Py_ssize_t n_trees, Py_ssize_t k_neighbors_in):
+    cdef Py_ssize_t k_neighbors = k_neighbors_in +1
+    if k_neighbors >=  n_samples1:
+        k_neighbors =  n_samples1
+
+    index_1 =  np.zeros((k_neighbors*n_samples2,),np.int32)
+    index_2 =  np.zeros((k_neighbors*n_samples2,),np.int32)
+    prox_values =  np.zeros((k_neighbors*n_samples2,),np.double)
+    cdef double[::1] prox_values_view = prox_values
+    cdef int[::1] index_1_view = index_1
+    cdef int[::1] index_2_view = index_2   
+    
+    index_1_best_intern =  np.zeros( (n_samples2,k_neighbors), np.int32)
+    index_2_best_intern =  np.zeros( (n_samples2,k_neighbors), np.int32)
+    prox_best_intern =  np.zeros( (n_samples2,k_neighbors), np.double)
+    cdef double[:,::1] prox_best_intern_view = prox_best_intern
+    cdef int[:,::1] index_1_best_intern_view = index_1_best_intern
+    cdef int[:,::1] index_2_best_intern_view = index_2_best_intern 
+
+    prox_zws =  np.zeros( (n_samples2,), np.double)
+    cdef double[::1] prox_zws_view = prox_zws
+    
+    cdef Py_ssize_t k
+    cdef Py_ssize_t k2
+    cdef Py_ssize_t k3
+    cdef Py_ssize_t k4
+    cdef Py_ssize_t index
+    cdef Py_ssize_t input_idx1
+    cdef Py_ssize_t input_idx2
+    cdef Py_ssize_t index_local
+    
+    cdef Py_ssize_t i
+
+    for input_idx2 in prange(n_samples2, nogil=True):
+        for input_idx1 in range(n_samples1):
+            prox_zws_view[input_idx2] = 0.0
+            for i in range(n_trees):
+                if node1[input_idx1,i] == node2[input_idx2,i]:
+                    prox_zws_view[input_idx2] = prox_zws_view[input_idx2] + 1
+                
+                #if prox_zws_view[input_idx2] + <double>(n_trees -i) < prox_best_intern_view[input_idx2,k_neighbors-1]:
+                #    break
+            if prox_zws_view[input_idx2] >= prox_best_intern_view[input_idx2,k_neighbors-1]:
+                # Needs to be included to the k best values; first find index
+                index = 0
+                for k2 in range(k_neighbors):
+                    if prox_zws_view[input_idx2] >= prox_best_intern_view[input_idx2,k2]:
+                        index = k2
+                        break
+                if index == k_neighbors-1:
+                    prox_best_intern_view[input_idx2,index] = prox_zws_view[input_idx2]
+                    index_1_best_intern_view[input_idx2,index] = input_idx1
+                    index_2_best_intern_view[input_idx2,index] = input_idx2
+                else:
+                    # Rearrange the vectors
+                    for k4 in range(k_neighbors-1,index,-1):
+                        prox_best_intern_view[input_idx2,k4] = prox_best_intern_view[input_idx2,k4-1]
+                        index_1_best_intern_view[input_idx2,k4] = index_1_best_intern_view[input_idx2,k4-1]
+                        index_2_best_intern_view[input_idx2,k4] = index_2_best_intern_view[input_idx2,k4-1]
+                    prox_best_intern_view[input_idx2,index] =prox_zws_view[input_idx2]
+                    index_1_best_intern_view[input_idx2,index] = input_idx1
+                    index_2_best_intern_view[input_idx2,index] = input_idx2
+            
+        
+        # Append the internal to the out vectors 
+        for k3 in range(k_neighbors):
+            index_local = <Py_ssize_t>(input_idx2*k_neighbors)+k3
+            prox_values_view[index_local] = prox_best_intern_view[input_idx2,k3]/n_trees
+            index_1_view[index_local] = index_1_best_intern_view[input_idx2,k3]
+            index_2_view[index_local] = index_2_best_intern_view[input_idx2,k3]
+        
+    return prox_values, index_1, index_2
 
 

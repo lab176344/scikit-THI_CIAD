@@ -57,7 +57,20 @@ def node_proximity(int[:,::1] nodes, Py_ssize_t n_samples, Py_ssize_t n_trees):
 
     return prox_Matrix
 
+def node_proximity2(int[:,::1] node1, int[:,::1] node2, Py_ssize_t n_samples1, Py_ssize_t n_samples2, Py_ssize_t n_trees):
+    prox_Matrix =  np.zeros((n_samples1,n_samples2),np.double)
+    cdef double[:,::1] prox_view = prox_Matrix
+    cdef Py_ssize_t input_idx1
+    cdef Py_ssize_t input_idx2
+    cdef Py_ssize_t i
+    for input_idx1 in prange(n_samples1,nogil=True):
+        for input_idx2 in range(n_samples2):
+            for i in range(n_trees):
+                if node1[input_idx1,i] == node2[input_idx2,i]:
+                    prox_view[input_idx1,input_idx2] = prox_view[input_idx1,input_idx2] + 1
+            prox_view[input_idx1,input_idx2] = prox_view[input_idx1,input_idx2]/n_trees    
 
+    return prox_Matrix
 
 
 
