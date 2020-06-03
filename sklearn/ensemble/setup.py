@@ -17,7 +17,12 @@ def configuration(parent_package="", top_path=None):
     
     config.add_extension("_node_proximity",
                         sources=["_node_proximity.pyx"],
-                        include_dirs=[numpy.get_include()])  
+                        include_dirs=[numpy.get_include()])
+    
+    config.add_extension("_node_proximity_knn",
+                        sources=["_node_proximity_knn.pyx"],
+                        include_dirs=[numpy.get_include()])                      
+                         
     
     config.add_extension("_path_proximity_binary",
                         sources=["_path_proximity_binary.pyx"],
