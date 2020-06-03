@@ -494,7 +494,7 @@ class BaseForest(MultiOutputMixin, BaseEnsemble, metaclass=ABCMeta):
 
         return prox_Matrix
 
-    def index_tree(self):
+    def index(self):
         # #RFAP
         for rfap_no in range(len(self.estimators_)):
             Tree = self.estimators_[rfap_no]
