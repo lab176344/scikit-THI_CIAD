@@ -4,8 +4,10 @@ import timeit
 import matplotlib.pyplot as plt
 import pandas as pd
 
-N = 2500
+N = 1000
 Dim = 10
+
+k_neighbors = 15
 
 posMean = 10
 n_trees = 100
@@ -31,13 +33,18 @@ stop = timeit.default_timer()
 print('Time: ', stop - start) 
 
 start = timeit.default_timer()
-matrix = estimator2.get_proximity_matrix(X, typeCalc='PathNormal')
+matrix1 = estimator2.get_proximity_matrix(X, typeCalc='PathNormal')
+stop = timeit.default_timer()
+print('Time: ', stop - start)
+print(matrix1)
+
+start = timeit.default_timer()
+matrix2 = estimator2.get_proximity_matrix(X, typeCalc='PathKNN',k_neighbors =k_neighbors)
 stop = timeit.default_timer()
 print('Time: ', stop - start) 
-print(matrix.mean())
-print(matrix)
-#plt.imshow(matrix)
-#plt.show()
+
+print(matrix2)
+
 
 
 Tree =estimator2.estimators_[0]
@@ -56,6 +63,7 @@ n_node_samples=Tree.tree_.n_node_samples
 weighted_n_node_samples=Tree.tree_.weighted_n_node_samples
 value=Tree.tree_.value
 depthT=Tree.tree_.depth
+print('Tree_structure')
 Data={'parent':parent,'left_idx':left_idx,'right_idx':right_idx,'random_factor':random_factor,
       'n_node_samples':n_node_samples, 'depth': depthT,
       'weighted_n_node_samples':weighted_n_node_samples,'impurity':impurity}

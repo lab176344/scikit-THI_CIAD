@@ -23,6 +23,10 @@ def configuration(parent_package="", top_path=None):
                         sources=["_path_proximity_binary.pyx"],
                         include_dirs=[numpy.get_include()])  
 
+    config.add_extension("_path_proximity_knn",
+                        sources=["_path_proximity_knn.pyx"],
+                        include_dirs=[numpy.get_include()])  
+
     config.add_extension("_indexing_tree",
                         sources=["_indexing_tree.pyx"],
                         include_dirs=[numpy.get_include()])  

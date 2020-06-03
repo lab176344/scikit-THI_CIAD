@@ -64,6 +64,7 @@ from ..utils.multiclass import check_classification_targets
 from ..utils.validation import check_is_fitted, _check_sample_weight
 from ._path_proximity_binary import path_proximity_binary
 from ._path_proximity import path_proximity
+from ._path_proximity_knn import path_proximity_knn
 from ._node_proximity import node_proximity
 
 __all__ = ["RandomForestClassifier",
@@ -384,45 +385,61 @@ class BaseForest(MultiOutputMixin, BaseEnsemble, metaclass=ABCMeta):
             spaces.append(space)
         return spaces
 
-    def get_proximity_matrix(self, X=None, typeCalc='Node'):
+    def get_proximity_matrix(self, X=None, X2=None, typeCalc='Node', k_neighbors=15):
         '''
         Info: Get the proximity matrix
         Input: Full Dataset and the type of proximity
         Return: proximity matrix
         '''
-        nodeData = self.encode(X)
-        sample_size = X.shape[0]
-        prox_Matrix = np.zeros((sample_size, sample_size))
+        if not X2:
+            # X vs X
+            nodeData = self.encode(X)
+            sample_size = X.shape[0]
 
-        depth = 0
-        for i in self.estimators_:
-            if(i.tree_.max_depth > depth):
-                depth = i.tree_.max_depth
+            depth = 0
+            for i in self.estimators_:
+                if(i.tree_.max_depth > depth):
+                    depth = i.tree_.max_depth
 
-        if typeCalc == 'PathBinary':
-            Paths, path_length = map(
-                list, zip(*[self.get_paths_by_leafs(i, depth) for i in nodeData]))
-            Paths = np.asarray(Paths, dtype=np.intc)
-            path_length = np.asarray(path_length, dtype=np.intc)
-            prox_Matrix = path_proximity_binary(
-                Paths, path_length, sample_size, len(self.estimators_))
-            prox_Matrix = np.triu(prox_Matrix, 1)+np.transpose(prox_Matrix)
-            np.fill_diagonal(prox_Matrix, 1)
-        elif typeCalc == 'PathNormal':
-            Paths, path_length = map(
-                list, zip(*[self.get_paths_by_leafs(i, depth) for i in nodeData]))
-            Paths = np.asarray(Paths, dtype=np.intc)
-            path_length = np.asarray(path_length, dtype=np.intc)
-            prox_Matrix = path_proximity(
-                Paths, path_length, sample_size, len(self.estimators_))
-            prox_Matrix = np.triu(prox_Matrix, 1)+np.transpose(prox_Matrix)
-            np.fill_diagonal(prox_Matrix, 1)
-        elif typeCalc == 'Node':
-            nodeData = np.asarray(nodeData, dtype=np.intc, order='C')
-            prox_Matrix = node_proximity(
-                nodeData, sample_size, len(self.estimators_))
+            if typeCalc == 'PathBinary':
+                prox_Matrix = np.zeros((sample_size, sample_size))
+                Paths, path_length = map(
+                    list, zip(*[self.get_paths_by_leafs(i, depth) for i in nodeData]))
+                Paths = np.asarray(Paths, dtype=np.intc)
+                path_length = np.asarray(path_length, dtype=np.intc)
+                prox_Matrix = path_proximity_binary(
+                    Paths, path_length, sample_size, len(self.estimators_))
+                prox_Matrix = np.triu(prox_Matrix, 1)+np.transpose(prox_Matrix)
+                np.fill_diagonal(prox_Matrix, 1)
+            elif typeCalc == 'PathNormal':
+                prox_Matrix = np.zeros((sample_size, sample_size))
+                Paths, path_length = map(
+                    list, zip(*[self.get_paths_by_leafs(i, depth) for i in nodeData]))
+                Paths = np.asarray(Paths, dtype=np.intc)
+                path_length = np.asarray(path_length, dtype=np.intc)
+                prox_Matrix = path_proximity(
+                    Paths, path_length, sample_size, len(self.estimators_))
+                prox_Matrix = np.triu(prox_Matrix, 1)+np.transpose(prox_Matrix)
+                np.fill_diagonal(prox_Matrix, 1)
+            elif typeCalc == 'PathKNN':
+                Paths, path_length = map(
+                    list, zip(*[self.get_paths_by_leafs(i, depth) for i in nodeData]))
+                Paths = np.asarray(Paths, dtype=np.intc)
+                path_length = np.asarray(path_length, dtype=np.intc)
+                prox_values, index_1, index_2 = path_proximity_knn(
+                    Paths, path_length, sample_size, len(self.estimators_), k_neighbors)
+                prox_Matrix = [prox_values, index_1, index_2]
+
+            elif typeCalc == 'Node':
+                prox_Matrix = np.zeros((sample_size, sample_size))
+                nodeData = np.asarray(nodeData, dtype=np.intc, order='C')
+                prox_Matrix = node_proximity(
+                    nodeData, sample_size, len(self.estimators_))
+            else:
+                raise ValueError('Not supported Proximity')
         else:
-            raise ValueError('Not supported Proximity')
+            # X vs X2
+            
 
         return prox_Matrix
 
