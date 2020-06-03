@@ -930,7 +930,7 @@ cdef class Tree:
 
         # Initialize output
         cdef np.ndarray[SIZE_t] out = np.zeros((n_samples,), dtype=np.intp)
-        cdef np.ndarray[INT64_t] out_rfap = np.zeros((n_samples,), dtype=np.int64)
+        cdef np.ndarray[DOUBLE_t] out_rfap = np.zeros((n_samples,), dtype=np.float64)
         cdef SIZE_t* out_ptr = <SIZE_t*> out.data
 
 
