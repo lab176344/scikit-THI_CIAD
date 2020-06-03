@@ -68,3 +68,30 @@ def path_proximity(int[:,:,::1] paths, int[:,::1] path_lengths, Py_ssize_t n_sam
             prox_view[input_idx1,input_idx2] = prox_view[input_idx1,input_idx2]/n_trees    
 
     return prox_Matrix
+
+def path_proximity2(int[:,:,::1] paths1,int[:,:,::1] paths2, int[:,::1] path_lengths1,int[:,::1] path_lengths2, Py_ssize_t n_samples1, Py_ssize_t n_samples2, Py_ssize_t n_trees):
+    prox_Matrix =  np.zeros((n_samples1,n_samples2),np.double)
+    cdef double[:,::1] prox_view = prox_Matrix
+    cdef int intersectAB
+    cdef int unionAB
+    sub =  np.zeros((n_samples1,),np.double)
+    cdef double[::1] sub_view = sub
+    cdef Py_ssize_t i
+    cdef int j
+    cdef Py_ssize_t input_idx1
+    cdef Py_ssize_t input_idx2
+    cdef int path_l
+    for input_idx1 in prange(n_samples1,nogil=True):
+        for input_idx2 in range(n_samples2):
+            for i in range(n_trees):
+                intersectAB = 1
+                path_l = min(path_lengths1[input_idx1,i],path_lengths2[input_idx2,i])
+                for j in range(1,path_l):
+                    if paths1[input_idx1,i,j] == paths2[input_idx2,i,j]:
+                        intersectAB=intersectAB+1
+                    else:
+                        break
+                prox_view[input_idx1,input_idx2] += (<double>intersectAB)/(<double>(path_lengths1[input_idx1,i]+ path_lengths2[input_idx2,i]-intersectAB))
+            prox_view[input_idx1,input_idx2] = prox_view[input_idx1,input_idx2]/n_trees    
+
+    return prox_Matrix

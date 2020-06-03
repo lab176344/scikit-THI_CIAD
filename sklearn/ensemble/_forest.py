@@ -62,10 +62,10 @@ from ._base import BaseEnsemble, _partition_estimators
 from ..utils.fixes import _joblib_parallel_args
 from ..utils.multiclass import check_classification_targets
 from ..utils.validation import check_is_fitted, _check_sample_weight
-from ._path_proximity_binary import path_proximity_binary
-from ._path_proximity import path_proximity
-from ._path_proximity_knn import path_proximity_knn
-from ._node_proximity import node_proximity
+from ._path_proximity import path_proximity, path_proximity2
+from ._path_proximity_knn import path_proximity_knn, path_proximity_knn2
+from ._node_proximity import node_proximity, node_proximity2
+from ._node_proximity_knn import node_proximity_knn, node_proximity_knn2
 
 __all__ = ["RandomForestClassifier",
            "RandomForestRegressor",
@@ -391,7 +391,7 @@ class BaseForest(MultiOutputMixin, BaseEnsemble, metaclass=ABCMeta):
         Input: Full Dataset and the type of proximity
         Return: proximity matrix
         '''
-        if not X2:
+        if X2 is None:
             # X vs X
             nodeData = self.encode(X)
             sample_size = X.shape[0]
@@ -401,17 +401,7 @@ class BaseForest(MultiOutputMixin, BaseEnsemble, metaclass=ABCMeta):
                 if(i.tree_.max_depth > depth):
                     depth = i.tree_.max_depth
 
-            if typeCalc == 'PathBinary':
-                prox_Matrix = np.zeros((sample_size, sample_size))
-                Paths, path_length = map(
-                    list, zip(*[self.get_paths_by_leafs(i, depth) for i in nodeData]))
-                Paths = np.asarray(Paths, dtype=np.intc)
-                path_length = np.asarray(path_length, dtype=np.intc)
-                prox_Matrix = path_proximity_binary(
-                    Paths, path_length, sample_size, len(self.estimators_))
-                prox_Matrix = np.triu(prox_Matrix, 1)+np.transpose(prox_Matrix)
-                np.fill_diagonal(prox_Matrix, 1)
-            elif typeCalc == 'PathNormal':
+            if typeCalc == 'PathNormal':
                 prox_Matrix = np.zeros((sample_size, sample_size))
                 Paths, path_length = map(
                     list, zip(*[self.get_paths_by_leafs(i, depth) for i in nodeData]))
@@ -429,17 +419,68 @@ class BaseForest(MultiOutputMixin, BaseEnsemble, metaclass=ABCMeta):
                 prox_values, index_1, index_2 = path_proximity_knn(
                     Paths, path_length, sample_size, len(self.estimators_), k_neighbors)
                 prox_Matrix = [prox_values, index_1, index_2]
-
             elif typeCalc == 'Node':
                 prox_Matrix = np.zeros((sample_size, sample_size))
                 nodeData = np.asarray(nodeData, dtype=np.intc, order='C')
                 prox_Matrix = node_proximity(
                     nodeData, sample_size, len(self.estimators_))
+            elif typeCalc == 'NodeKNN':
+                prox_Matrix = np.zeros((sample_size, sample_size))
+                nodeData = np.asarray(nodeData, dtype=np.intc, order='C')
+                prox_Matrix = node_proximity_knn(
+                    nodeData, sample_size, len(self.estimators_), k_neighbors)
             else:
                 raise ValueError('Not supported Proximity')
         else:
             # X vs X2
-            
+            nodeData1 = self.encode(X)
+            nodeData2 = self.encode(X2)
+            sample_size1 = X.shape[0]
+            sample_size2 = X2.shape[0]
+
+            depth = 0
+            for i in self.estimators_:
+                if(i.tree_.max_depth > depth):
+                    depth = i.tree_.max_depth
+
+            if typeCalc == 'PathNormal':
+                prox_Matrix = np.zeros((sample_size1, sample_size2))
+
+                Paths1, path_length1 = map(
+                    list, zip(*[self.get_paths_by_leafs(i, depth) for i in nodeData1]))
+                Paths1 = np.asarray(Paths1, dtype=np.intc)
+                path_length1 = np.asarray(path_length1, dtype=np.intc)
+
+                Paths2, path_length2 = map(
+                    list, zip(*[self.get_paths_by_leafs(i, depth) for i in nodeData2]))
+                Paths2 = np.asarray(Paths2, dtype=np.intc)
+                path_length2 = np.asarray(path_length2, dtype=np.intc)
+
+                prox_Matrix = path_proximity2(
+                    Paths1, Paths2, path_length1, path_length2, sample_size1, sample_size2, len(self.estimators_))
+            elif typeCalc == 'PathKNN':
+                Paths1, path_length1 = map(
+                    list, zip(*[self.get_paths_by_leafs(i, depth) for i in nodeData1]))
+                Paths1 = np.asarray(Paths1, dtype=np.intc)
+                path_length1 = np.asarray(path_length1, dtype=np.intc)
+
+                Paths2, path_length2 = map(
+                    list, zip(*[self.get_paths_by_leafs(i, depth) for i in nodeData2]))
+                Paths2 = np.asarray(Paths2, dtype=np.intc)
+                path_length2 = np.asarray(path_length2, dtype=np.intc)
+
+                prox_values, index_1, index_2 = path_proximity_knn2(
+                    Paths1, Paths2, path_length1, path_length2, sample_size1, sample_size2, len(self.estimators_), k_neighbors)
+                prox_Matrix = [prox_values, index_1, index_2]
+            elif typeCalc == 'Node':
+                prox_Matrix = node_proximity2(
+                    nodeData1, nodeData2, sample_size, len(self.estimators_))
+            elif typeCalc == 'NodeKNN':
+                prox_Matrix = node_proximity_knn2(
+                    nodeData1, nodeData2, sample_size, len(self.estimators_), k_neighbors)
+            else:
+                raise ValueError('Not supported Proximity')
+
 
         return prox_Matrix
 
