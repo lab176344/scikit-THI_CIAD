@@ -494,7 +494,7 @@ class BaseForest(MultiOutputMixin, BaseEnsemble, metaclass=ABCMeta):
 
         return prox_Matrix
 
-    def index(self):
+    def index(self,type_expect = 2):
         # #RFAP
         for rfap_no in range(len(self.estimators_)):
             Tree = self.estimators_[rfap_no]
@@ -503,8 +503,19 @@ class BaseForest(MultiOutputMixin, BaseEnsemble, metaclass=ABCMeta):
             max_path = Tree.tree_.max_depth
             node_depth = np.asarray(Tree.tree_.depth, order='C')
             node_count = Tree.tree_.node_count
-            rfap = _indexing_tree.index_tree(left_idx,right_idx,node_depth,node_count,max_path,2)
-            self.estimators_[rfap_no].tree_.rfap_store = rfap
+            rfap = _indexing_tree.index_tree(left_idx,right_idx,node_depth,node_count,max_path,type_expect)
+            rfap_type = np.zeros((rfap.shape[0],), dtype=np.float64)
+            self.estimators_[rfap_no].tree_.depth_check = node_depth
+            if type_expect == 1:
+                for i in range(rfap.shape[0]): 
+                    rfap_type[i] = (float(''.join(map(str, rfap[i,:]))))
+                self.estimators_[rfap_no].tree_.rfap_store = rfap_type
+            else:
+                self.estimators_[rfap_no].tree_.rfap_store = rfap
+
+
+
+
     
     
     def fit(self, X, y, sample_weight=None):
@@ -2520,7 +2531,7 @@ class UnsupervisedRandomForest(BaseForest):
                               "max_features",
                               "min_impurity_decrease", "min_impurity_split",
                               "random_state"),
-            bootstrap=True,
+            bootstrap=False,
             oob_score=False,
             n_jobs=n_jobs,
             random_state=random_state,

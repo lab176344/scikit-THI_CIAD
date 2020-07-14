@@ -57,6 +57,7 @@ cdef class Tree:
     cdef public SIZE_t node_count        # Counter for node IDs
     cdef public SIZE_t capacity          # Capacity of tree, in terms of nodes
     cdef public DOUBLE_t[:,] rfap_store   # Rfap storage
+    cdef public SIZE_t[:,] depth_check   # Depth storage
     cdef Node* nodes                     # Array of nodes
     cdef double* value                   # (capacity, n_outputs, max_n_classes) array of values
     cdef SIZE_t value_stride             # = n_outputs * max_n_classes

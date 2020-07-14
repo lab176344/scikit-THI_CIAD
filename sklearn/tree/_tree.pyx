@@ -953,6 +953,7 @@ cdef class Tree:
                 out_rfap[i] =  self.rfap_store[node - self.nodes]
                 out_ptr[i] = <SIZE_t>(node - self.nodes)  # node offset
         return out_rfap
+
         
     cpdef object decision_path(self, object X):
         """Finds the decision path (=node) for each sample in X."""
