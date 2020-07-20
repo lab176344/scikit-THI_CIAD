@@ -60,6 +60,7 @@ The installation procedure is as follows ::
       - cd scikit-THI
       - pip install --verbose --editable .
       - python test.py
+   - Follow the procedure in https://dzone.com/articles/executable-package-pip-install for wheel creation
 
 If the ``test pass`` message is received, the installation is proper and the Random Forest implementation can be used.
 
