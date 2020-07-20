@@ -67,6 +67,7 @@ from ._path_proximity_knn import path_proximity_knn, path_proximity_knn2
 from ._node_proximity import node_proximity, node_proximity2
 from ._node_proximity_knn import node_proximity_knn, node_proximity_knn2
 from sklearn.ensemble import _indexing_tree
+from joblib import Parallel, delayed
 
 __all__ = ["RandomForestClassifier",
            "RandomForestRegressor",
@@ -172,7 +173,8 @@ def _parallel_build_trees(tree, forest, X, y, sample_weight, tree_idx, n_trees,
         tree.fit(X, y, sample_weight=sample_weight, check_input=False)
 
     return tree
-
+def func(x):
+    return x
 
 class BaseForest(MultiOutputMixin, BaseEnsemble, metaclass=ABCMeta):
     """
@@ -494,6 +496,7 @@ class BaseForest(MultiOutputMixin, BaseEnsemble, metaclass=ABCMeta):
 
         return prox_Matrix
 
+   
     def index(self,type_expect = 2):
         # #RFAP
         for rfap_no in range(len(self.estimators_)):
@@ -503,16 +506,17 @@ class BaseForest(MultiOutputMixin, BaseEnsemble, metaclass=ABCMeta):
             max_path = Tree.tree_.max_depth
             node_depth = np.asarray(Tree.tree_.depth, order='C')
             node_count = Tree.tree_.node_count
+            #print(_indexing_tree.index_tree(left_idx,right_idx,node_depth,node_count,max_path,type_expect))
             rfap = _indexing_tree.index_tree(left_idx,right_idx,node_depth,node_count,max_path,type_expect)
-            rfap_type = np.zeros((rfap.shape[0],), dtype=np.float64)
+            #rfap_type = np.zeros((rfap.shape[0],), dtype=np.float64)
             self.estimators_[rfap_no].tree_.depth_check = node_depth
             if type_expect == 1:
-                for i in range(rfap.shape[0]): 
-                    rfap_type[i] = (float(''.join(map(str, rfap[i,:]))))
-                self.estimators_[rfap_no].tree_.rfap_store = rfap_type
+                #for i in range(rfap.shape[0]):
+                #rfap_type= Parallel(n_jobs=-1)(delayed(func)(float(''.join(map(str, rfap[i,:])))) for i in range(rfap.shape[0])) 
+                #    rfap_type[i] = (float(''.join(map(str, rfap[i,:]))))
+                self.estimators_[rfap_no].tree_.rfap_store = rfap
             else:
                 self.estimators_[rfap_no].tree_.rfap_store = rfap
-
 
 
 
