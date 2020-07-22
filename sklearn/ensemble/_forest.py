@@ -315,6 +315,28 @@ class BaseForest(MultiOutputMixin, BaseEnsemble, metaclass=ABCMeta):
                 for tree in self.estimators_)
         X_encode = np.array(results).T
         return X_encode
+    
+    def encode_rfap_sparse(self, X):
+        """Return the encoded data
+
+        Parameters
+        ----------
+        X : ndarray
+            shape = [n_samples, n_features]
+
+        Returns
+        -------
+        X_encode: ndarray
+            shape = [n_samples, n_trees]
+            X_encode[i, j] represent the rfap for the j'th tree for the i'th sample
+        """
+        X = self._validate_X_predict(X)
+        results = Parallel(n_jobs=self.n_jobs, verbose=self.verbose,
+                           **_joblib_parallel_args(prefer='threads'))(
+                delayed(tree.apply_rfap_sparse)(X, check_input=False)
+                for tree in self.estimators_)
+        X_encode = np.array(results).T
+        return X_encode
 
     def decode(self, X_encode, sample_method="minimal", null_value=0.):
         """Return the decoded data

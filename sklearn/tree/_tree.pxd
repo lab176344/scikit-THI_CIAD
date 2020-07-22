@@ -79,8 +79,8 @@ cdef class Tree:
     cdef np.ndarray _apply_dense(self, object X)
     cdef np.ndarray _apply_sparse_csr(self, object X)
     cpdef np.ndarray apply_rfap(self, object X)
-
-
+    cpdef np.ndarray apply_rfap_sparse(self, object X)
+    
     cpdef object decision_path(self, object X)
     cdef object _decision_path_dense(self, object X)
     cdef object _decision_path_sparse_csr(self, object X)

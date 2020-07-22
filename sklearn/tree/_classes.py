@@ -504,6 +504,35 @@ class BaseDecisionTree(MultiOutputMixin, BaseEstimator, metaclass=ABCMeta):
         return self.tree_.apply_rfap(X)
 
 
+    def apply_rfap_sparse(self,X,check_input=True):
+        """Return the rfap of the leaf that each sample is predicted as.
+
+        .. versionadded:: 0.1
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape (n_samples, n_features)
+            The input samples. Internally, it will be converted to
+            ``dtype=np.float32`` and if a sparse matrix is provided
+            to a sparse ``csr_matrix``.
+
+        check_input : bool, default=True
+            Allow to bypass several input checking.
+            Don't use this parameter unless you know what you do.
+
+        Returns
+        -------
+        rfaps : array-like of shape (n_samples,)
+            For each datapoint x in X, return the rfap of the leaf x
+            ends up in. Leaves are numbered within
+            ``[0; self.tree_.node_count)``, possibly with gaps in the
+            numbering.
+        """
+        check_is_fitted(self)
+        X = self._validate_X_predict(X, check_input)
+        return self.tree_.apply_rfap_sparse(X)
+
+
     def decision_path(self, X, check_input=True):
         """Return the decision path in the tree.
 

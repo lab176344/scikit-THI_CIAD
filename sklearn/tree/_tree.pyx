@@ -953,6 +953,84 @@ cdef class Tree:
                 out_rfap[i] =  self.rfap_store[node - self.nodes]
                 out_ptr[i] = <SIZE_t>(node - self.nodes)  # node offset
         return out_rfap
+    
+    cpdef np.ndarray apply_rfap_sparse(self, object X):
+        """Finds the terminal region (=leaf node) for each sample in sparse X.
+        """
+        # Check input
+        if not isinstance(X, csr_matrix):
+            raise ValueError("X should be in csr_matrix format, got %s"
+                             % type(X))
+
+        if X.dtype != DTYPE:
+            raise ValueError("X.dtype should be np.float32, got %s" % X.dtype)
+
+        # Extract input
+        cdef np.ndarray[ndim=1, dtype=DTYPE_t] X_data_ndarray = X.data
+        cdef np.ndarray[ndim=1, dtype=INT32_t] X_indices_ndarray  = X.indices
+        cdef np.ndarray[ndim=1, dtype=INT32_t] X_indptr_ndarray  = X.indptr
+
+        cdef DTYPE_t* X_data = <DTYPE_t*>X_data_ndarray.data
+        cdef INT32_t* X_indices = <INT32_t*>X_indices_ndarray.data
+        cdef INT32_t* X_indptr = <INT32_t*>X_indptr_ndarray.data
+
+        cdef SIZE_t n_samples = X.shape[0]
+        cdef SIZE_t n_features = X.shape[1]
+
+        # Initialize output
+        cdef np.ndarray[SIZE_t, ndim=1] out = np.zeros((n_samples,),
+                                                       dtype=np.intp)
+        cdef np.ndarray[DOUBLE_t] out_rfap = np.zeros((n_samples,), dtype=np.float64)
+
+        cdef SIZE_t* out_ptr = <SIZE_t*> out.data
+
+        # Initialize auxiliary data-structure
+        cdef DTYPE_t feature_value = 0.
+        cdef Node* node = NULL
+        cdef DTYPE_t* X_sample = NULL
+        cdef SIZE_t i = 0
+        cdef INT32_t k = 0
+
+        # feature_to_sample as a data structure records the last seen sample
+        # for each feature; functionally, it is an efficient way to identify
+        # which features are nonzero in the present sample.
+        cdef SIZE_t* feature_to_sample = NULL
+
+        safe_realloc(&X_sample, n_features)
+        safe_realloc(&feature_to_sample, n_features)
+
+        with nogil:
+            memset(feature_to_sample, -1, n_features * sizeof(SIZE_t))
+
+            for i in range(n_samples):
+                node = self.nodes
+
+                for k in range(X_indptr[i], X_indptr[i + 1]):
+                    feature_to_sample[X_indices[k]] = i
+                    X_sample[X_indices[k]] = X_data[k]
+
+                # While node not a leaf
+                while node.left_child != _TREE_LEAF:
+                    # ... and node.right_child != _TREE_LEAF:
+                    if feature_to_sample[node.feature] == i:
+                        feature_value = X_sample[node.feature]
+
+                    else:
+                        feature_value = 0.
+
+                    if feature_value <= node.threshold:
+                        node = &self.nodes[node.left_child]
+                    else:
+                        node = &self.nodes[node.right_child]
+
+                out_ptr[i] = <SIZE_t>(node - self.nodes)  # node offset
+                out_rfap[i] =  self.rfap_store[node - self.nodes]
+            # Free auxiliary arrays
+            free(X_sample)
+            free(feature_to_sample)
+
+        return out_rfap
+
 
         
     cpdef object decision_path(self, object X):
