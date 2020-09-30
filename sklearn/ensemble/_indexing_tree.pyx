@@ -60,7 +60,7 @@ def index_tree(int64[::1,] left_idx, int64[::1,] right_idx, int64[::1,] node_dep
     cdef Py_ssize_t i
     level_count = 0
     rfap_gen =  np.zeros((node_depth.shape[0],max_depth-level_count),dtype=np.int)
-    
+    cdef int depth_count = max_depth-level_count
     rfap_gen[left_idx[0],0] = int(1)
     rfap_gen[right_idx[0],0] = int(2)
     rfap_raw = np.zeros((node_depth.shape[0],),np.float64)
@@ -89,8 +89,11 @@ def index_tree(int64[::1,] left_idx, int64[::1,] right_idx, int64[::1,] node_dep
     
     if rfap_type == 1:
         return rfap_raw
-    else:
+    elif rfap_type == 2:
         return rfap_ter
+    else:
+        return rfap_gen, depth_count
+
 
 
 

@@ -953,6 +953,47 @@ cdef class Tree:
                 out_rfap[i] =  self.rfap_store[node - self.nodes]
                 out_ptr[i] = <SIZE_t>(node - self.nodes)  # node offset
         return out_rfap
+
+    cpdef np.ndarray apply_rfap2(self, object X):
+        # Check input
+     # Check input
+        if not isinstance(X, np.ndarray):
+            raise ValueError("X should be in np.ndarray format, got %s"
+                             % type(X))
+
+        if X.dtype != DTYPE:
+            raise ValueError("X.dtype should be np.float32, got %s" % X.dtype)
+
+        # Extract input
+        cdef DTYPE_t[:, :] X_ndarray = X
+        cdef SIZE_t n_samples = X.shape[0]
+
+        # Initialize output
+        cdef np.ndarray[SIZE_t] out = np.zeros((n_samples,), dtype=np.intp)
+        cdef np.ndarray[DOUBLE_t] out_rfap = np.zeros((n_samples,), dtype=np.float64)
+        cdef SIZE_t* out_ptr = <SIZE_t*> out.data
+        cdef np.ndarray[INT32_t, ndim=2] outc = np.zeros((n_samples,self.rfap_dim), dtype=np.int32)
+ 
+        cdef INT32_t[:,:] outc_view = outc
+
+        # Initialize auxiliary data-structure
+        cdef Node* node = NULL
+        cdef SIZE_t i = 0
+
+        with nogil:
+            for i in range(n_samples):
+                node = self.nodes
+                # While node not a leaf
+                while node.left_child != _TREE_LEAF:
+                    # ... and node.right_child != _TREE_LEAF:
+                    if X_ndarray[i, node.feature] <= node.threshold:
+                        node = &self.nodes[node.left_child]
+                    else:
+                        node = &self.nodes[node.right_child]
+                outc_view[i] =  self.rfap_raw[node - self.nodes,:]
+                out_ptr[i] = <SIZE_t>(node - self.nodes)  # node offset
+        return outc
+  
     
     cpdef np.ndarray apply_rfap_sparse(self, object X):
         """Finds the terminal region (=leaf node) for each sample in sparse X.

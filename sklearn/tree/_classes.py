@@ -475,7 +475,7 @@ class BaseDecisionTree(MultiOutputMixin, BaseEstimator, metaclass=ABCMeta):
         X = self._validate_X_predict(X, check_input)
         return self.tree_.apply(X)
 
-    def apply_rfap(self,X,check_input=True):
+    def apply_rfap2(self,X,check_input=True):
         """Return the rfap of the leaf that each sample is predicted as.
 
         .. versionadded:: 0.1
@@ -501,7 +501,7 @@ class BaseDecisionTree(MultiOutputMixin, BaseEstimator, metaclass=ABCMeta):
         """
         check_is_fitted(self)
         X = self._validate_X_predict(X, check_input)
-        return self.tree_.apply_rfap(X)
+        return self.tree_.apply_rfap2(X)
 
 
     def apply_rfap_sparse(self,X,check_input=True):

@@ -56,7 +56,10 @@ cdef class Tree:
     cdef public SIZE_t max_depth         # Max depth of the tree
     cdef public SIZE_t node_count        # Counter for node IDs
     cdef public SIZE_t capacity          # Capacity of tree, in terms of nodes
-    cdef public DOUBLE_t[:,] rfap_store   # Rfap storage
+    cdef public DOUBLE_t[:,] rfap_store  # Rfap 
+    cdef public INT32_t rfap_dim         # Rfap dim
+
+    cdef public INT32_t[:,:] rfap_raw    # Fast RFAP
     cdef public SIZE_t[:,] depth_check   # Depth storage
     cdef Node* nodes                     # Array of nodes
     cdef double* value                   # (capacity, n_outputs, max_n_classes) array of values
@@ -79,6 +82,8 @@ cdef class Tree:
     cdef np.ndarray _apply_dense(self, object X)
     cdef np.ndarray _apply_sparse_csr(self, object X)
     cpdef np.ndarray apply_rfap(self, object X)
+    cpdef np.ndarray apply_rfap2(self, object X)
+
     cpdef np.ndarray apply_rfap_sparse(self, object X)
     
     cpdef object decision_path(self, object X)

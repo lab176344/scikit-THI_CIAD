@@ -311,10 +311,10 @@ class BaseForest(MultiOutputMixin, BaseEnsemble, metaclass=ABCMeta):
         X = self._validate_X_predict(X)
         results = Parallel(n_jobs=self.n_jobs, verbose=self.verbose,
                            **_joblib_parallel_args(prefer='threads'))(
-                delayed(tree.apply_rfap)(X, check_input=False)
+                delayed(tree.apply_rfap2)(X, check_input=False)
                 for tree in self.estimators_)
-        X_encode = np.array(results).T
-        return X_encode
+        #X_encode = np.array(results)
+        return results
     
     def encode_rfap_sparse(self, X):
         """Return the encoded data
@@ -529,7 +529,11 @@ class BaseForest(MultiOutputMixin, BaseEnsemble, metaclass=ABCMeta):
             node_depth = np.asarray(Tree.tree_.depth, order='C')
             node_count = Tree.tree_.node_count
             #print(_indexing_tree.index_tree(left_idx,right_idx,node_depth,node_count,max_path,type_expect))
-            rfap = _indexing_tree.index_tree(left_idx,right_idx,node_depth,node_count,max_path,type_expect)
+            if(type_expect==3):
+                rfap,depth_count = _indexing_tree.index_tree(left_idx,right_idx,node_depth,node_count,max_path,type_expect)
+            else:
+                rfap = _indexing_tree.index_tree(left_idx,right_idx,node_depth,node_count,max_path,type_expect)
+
             #rfap_type = np.zeros((rfap.shape[0],), dtype=np.float64)
             self.estimators_[rfap_no].tree_.depth_check = node_depth
             if type_expect == 1:
@@ -537,8 +541,11 @@ class BaseForest(MultiOutputMixin, BaseEnsemble, metaclass=ABCMeta):
                 #rfap_type= Parallel(n_jobs=-1)(delayed(func)(float(''.join(map(str, rfap[i,:])))) for i in range(rfap.shape[0])) 
                 #    rfap_type[i] = (float(''.join(map(str, rfap[i,:]))))
                 self.estimators_[rfap_no].tree_.rfap_store = rfap
-            else:
+            elif type_expect == 2:
                 self.estimators_[rfap_no].tree_.rfap_store = rfap
+            else:
+                self.estimators_[rfap_no].tree_.rfap_raw   = rfap
+                self.estimators_[rfap_no].tree_.rfap_dim = depth_count
 
 
 
