@@ -35,6 +35,10 @@ def configuration(parent_package="", top_path=None):
     config.add_extension("_indexing_tree",
                         sources=["_indexing_tree.pyx"],
                         include_dirs=[numpy.get_include()])  
+						
+    config.add_extension("hamming_distance",
+                        sources=["hamming_distance.pyx"],
+                        include_dirs=[numpy.get_include()])						
                         
                          
 
