@@ -63,13 +63,7 @@ def index_tree(int64[::1,] left_idx, int64[::1,] right_idx, int64[::1,] node_dep
     cdef int depth_count = max_depth-level_count
     rfap_gen[left_idx[0],0] = int(1)
     rfap_gen[right_idx[0],0] = int(2)
-    rfap_raw = np.zeros((node_depth.shape[0],),np.float64)
-    rfap_raw[left_idx[0],] = (float(''.join(map(str,rfap_gen[left_idx[0],:]))))
-    rfap_raw[right_idx[0],] = (float(''.join(map(str,rfap_gen[right_idx[0],:]))))
-    if rfap_type == 2:
-        rfap_ter = np.zeros((node_depth.shape[0],),np.float64)
-        rfap_ter[left_idx[0],] = convert_number((rfap_gen[left_idx[0],:]),max_depth)
-        rfap_ter[right_idx[0],] = convert_number((rfap_gen[right_idx[0],:]),max_depth)
+
     for i in range(1,n_nodes):
         if left_idx[i]!=-1 and right_idx[i]!=-1:
             base_index = rfap_gen[i,:]
@@ -80,19 +74,8 @@ def index_tree(int64[::1,] left_idx, int64[::1,] right_idx, int64[::1,] node_dep
             rfap_gen[left_idx[i],:] = base_to_left.copy()
             rfap_gen[right_idx[i],:] = base_to_right.copy()
 
-        if rfap_type == 2:       
-            rfap_ter[left_idx[i],] = convert_number((rfap_gen[left_idx[i],:]),max_depth)
-            rfap_ter[right_idx[i],] = convert_number((rfap_gen[right_idx[i],:]),max_depth)
-        else:
-            rfap_raw[left_idx[i],] = (float(''.join(map(str,rfap_gen[left_idx[i],:]))))
-            rfap_raw[right_idx[i],] = (float(''.join(map(str,rfap_gen[right_idx[i],:]))))
-    
-    if rfap_type == 1:
-        return rfap_raw
-    elif rfap_type == 2:
-        return rfap_ter
-    else:
-        return rfap_gen, depth_count
+
+    return rfap_gen, depth_count
 
 
 
