@@ -8,9 +8,8 @@ import numpy as np
 cimport numpy as np
 import cython
 
-cdef extern from "math.h":
-    double abs(double t)
-ctypedef np.npy_float32 DTYPE_t          # Type of X
+
+from cython.parallel import prange
 
 @cython.wraparound(False)
 @cython.boundscheck(False)
@@ -21,9 +20,16 @@ def hamming_distance(r):
     ans = np.zeros((size,size), dtype=np.float64)
     tree_size =r.shape[1]
     c = -1
-    for i in range(r.shape[0]):
-        for j in range(i, r.shape[0]):
+    cdef double intersect
+    for i in range(size):
+        for j in range(i, size):
             for k in range(tree_size):
-                ans[i,j] += (sum(c1 != c2 for c1, c2 in zip(r[i,k], r[j,k])))/len(r[i,k])
+                intersect = 0
+                for c1, c2 in zip(r[i,k], r[j,k]):
+                    if c1==c2:
+                        intersect += 1
+                    else:
+                        break
+                ans[i,j] += intersect/len(r[i,k])
             ans[i,j] =ans[i,j]/ tree_size
     return ans
