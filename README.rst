@@ -106,10 +106,8 @@ Example ::
    
 Citation
 ============
-     ::
-     
-   @misc{lakwurst.2020,
-    author = {{L. Balasubramanian} and {J. Wurst},
+   @misc{lakwurst.2020, 
+    author = {{L. Balasubramanian} and {J. Wurst}, 
     date = {2020},
     title = {{scikit - THI}},
     journal={GitHub repository},
